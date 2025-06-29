@@ -1,2 +1,7 @@
 npx sequelize-cli db:migrate
 npx sequelize-cli db:seed:all
+
+1. multer npm : Dung de load file
+2. npm install --save bcrypt@5.0.1 : dung de ma hoa mat khau
+3. 
+
