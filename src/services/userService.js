@@ -117,10 +117,9 @@ let createNewUser = (data) => {
          if (check === true) {
             resolve({
                errorCode: 1,
-               message: "Your email is already in used. Please try another email"
+               errorMessage: "Your email is already in used. Please try another email"
             })
-         }
-         else {
+         } else {
             let hashPasswordFromBrcrypt = await hashUserPassword(data.password);
             await db.User.create({
                email: data.email,
@@ -178,17 +177,19 @@ let deleteUser = (userId) => {
 let updateUser = (data) => {
    return new Promise(async (resolve, reject) => {
       try {
-         if(!data.id) {
+         if (!data.id) {
             resolve({
                errorCode: 2,
                errorMessage: 'Missing required parameters'
             })
          }
          let user = await db.User.findOne({
-            where: { id: data.id },
+            where: {
+               id: data.id
+            },
             raw: false
          })
-         if(user) {
+         if (user) {
             user.firstName = data.firstName;
             user.lastName = data.lastName;
             user.address = data.address;
@@ -211,11 +212,37 @@ let updateUser = (data) => {
    })
 }
 
+let getAllCodeService = (typeInput) => {
+   return new Promise(async (resolve, reject) => {
+      try {
+         if(!typeInput) {
+            resolve({
+               errorCode: 1,
+               errorMessage: 'Missing required parameters !'
+            })
+         } else {
+            let res = {};
+
+            let allcode = await db.Allcode.findAll({
+               where: { type: typeInput }
+            });
+            res.errorCode = 0;
+            res.data = allcode;
+
+            resolve(res);
+         }
+      } catch (error) {
+         reject(error)
+      }
+   })
+}
+
 module.exports = {
    handleUserLogin: handleUserLogin,
    getAllUsers: getAllUsers,
    createNewUser: createNewUser,
    deleteUser: deleteUser,
    updateUser: updateUser,
+   getAllCodeService: getAllCodeService,
 
 }
