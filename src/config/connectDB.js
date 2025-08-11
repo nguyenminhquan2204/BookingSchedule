@@ -1,7 +1,8 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('demosern', 'root', 'quan220424', {
-   host: 'localhost',
+const sequelize = new Sequelize('demosern', 'root', "123456", {
+   host: '127.0.0.1',
+   port: 3330,
    dialect: 'mysql',
    logging: false
 });
@@ -11,7 +12,7 @@ let connectDB = async () => {
       await sequelize.authenticate();
       console.log('Connection has been established successfully.');
    } catch (error) {
-      console.error('');
+      console.error(error);
    }
 }
 

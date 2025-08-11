@@ -13,7 +13,7 @@ let handleUserLogin = (email, password) => {
             // user already exist
             // compare password
             let user = await db.User.findOne({
-               attributes: ['email', 'roleId', 'password'],
+               attributes: ['email', 'roleId', 'password', 'firstName', 'lastName'],
                where: {
                   email: email
                },
@@ -128,8 +128,10 @@ let createNewUser = (data) => {
                lastName: data.lastName,
                address: data.address,
                phoneNumber: data.phoneNumber,
-               gender: data.gender === '1' ? true : false,
+               gender: data.gender,
                roleId: data.roleId,
+               positionId: data.positionId,
+               image: data.avatar
             })
 
             resolve({
@@ -177,7 +179,7 @@ let deleteUser = (userId) => {
 let updateUser = (data) => {
    return new Promise(async (resolve, reject) => {
       try {
-         if (!data.id) {
+         if (!data.id || !data.roleId || !data.positionId || !data.gender) {
             resolve({
                errorCode: 2,
                errorMessage: 'Missing required parameters'
@@ -193,6 +195,13 @@ let updateUser = (data) => {
             user.firstName = data.firstName;
             user.lastName = data.lastName;
             user.address = data.address;
+            user.roleId = data.roleId;
+            user.positionId = data.positionId;
+            user.gender = data.gender;
+            user.phoneNumber = data.phoneNumber;
+            if (data.avatar) {
+               user.image = data.avatar;
+            }
 
             await user.save();
 
@@ -215,7 +224,7 @@ let updateUser = (data) => {
 let getAllCodeService = (typeInput) => {
    return new Promise(async (resolve, reject) => {
       try {
-         if(!typeInput) {
+         if (!typeInput) {
             resolve({
                errorCode: 1,
                errorMessage: 'Missing required parameters !'
@@ -224,7 +233,9 @@ let getAllCodeService = (typeInput) => {
             let res = {};
 
             let allcode = await db.Allcode.findAll({
-               where: { type: typeInput }
+               where: {
+                  type: typeInput
+               }
             });
             res.errorCode = 0;
             res.data = allcode;

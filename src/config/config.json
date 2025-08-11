@@ -1,10 +1,11 @@
 {
   "development": {
     "username": "root",
-    "password": "quan220424",
+    "password": "123456",
     "database": "demosern",
     "host": "127.0.0.1",
     "dialect": "mysql",
+    "port": 3330,
     "logging": false,
     "query": {
       "raw": true
