@@ -58,7 +58,7 @@ let handleEditUser = async (req, res) => {
 }
 
 let handleDeleteUser = async (req, res) => {
-   if(!req.body.id) {
+   if (!req.body.id) {
       return res.status(200).json({
          errorCode: 1,
          errorMessage: "Missing required parameters!"
