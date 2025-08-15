@@ -1,4 +1,8 @@
 import db from '../models/index';
+import _ from 'lodash';
+require('dotenv').config();
+
+const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
 
 let getTopDoctorHomeService = (limit) => {
    return new Promise(async (resolve, reject) => {
@@ -50,18 +54,35 @@ let getAllDoctorsService = () => {
 let saveDetailInfoDoctor = (data) => {
    return new Promise(async (resolve, reject) => {
       try {
-         if(!data.doctorId || !data.contentHTML || !data.contentMarkdown) {
+         if(!data.doctorId || !data.contentHTML || !data.contentMarkdown || !data.action) {
             resolve({
                errorCode: 1,
                errorMessage: 'Missing parameters!'
             })
          } else {
-            await db.Markdown.create({
-               contentHTML: data.contentHTML,
-               contentMarkdown: data.contentMarkdown,
-               description: data.description,
-               doctorId: data.doctorId
-            });
+            if(data.action === 'CREATE') {
+               await db.Markdown.create({
+                  contentHTML: data.contentHTML,
+                  contentMarkdown: data.contentMarkdown,
+                  description: data.description,
+                  doctorId: data.doctorId
+               });
+            } else if(data.action === 'EDIT') {
+               let doctorMarkdown = await db.Markdown.findOne({
+                  where: { doctorId: data.doctorId },
+                  raw: true
+               })
+
+               if(doctorMarkdown) {
+                  await db.Markdown.update({
+                     contentHTML: data.contentHTML,
+                     contentMarkdown: data.contentMarkdown,
+                     description: data.description,
+                  }, {
+                     where: { doctorId: data.doctorId }
+                  });
+               }
+            }
 
             resolve({
                errorCode: 0,
@@ -86,7 +107,7 @@ let getDetailDoctorById = (id) => {
             let data = await db.User.findOne({
                where: { id: id},
                attributes: {
-                  exclude: ['password', 'image']
+                  exclude: ['password']
                }, 
                include: [
                   { 
@@ -99,13 +120,79 @@ let getDetailDoctorById = (id) => {
                      attributes: ['valueVi', 'valueEn']
                   }
                ],
-               raw: true,
+               raw: false,
                nest: true
             });
+
+            if(data && data.image) {
+               data.image = new Buffer(data.image, 'base64').toString('binary');
+            }
+
+            if(!data) data = {}
 
             resolve({
                errorCode: 0,
                data: data
+            })
+         }
+      } catch (error) {
+         reject(error);
+      }
+   })
+}
+
+let bulkCreateSchedule = (data) => {
+   return new Promise(async (resolve, reject) => {
+      try {
+         if(!data.arrSchedule || !data.doctorId || !data.date) {
+            resolve({
+               errorCode: 1,
+               errorMessage: 'Missing required parameters!'
+            })
+         } else {
+            let schedule = data.arrSchedule;
+            // console.log("Data send: ", schedule);
+            // console.log("Data type send: ", typeof schedule);
+
+            if(schedule && schedule.length > 0) {
+               schedule = schedule.map(item => {
+                  item.maxNumber = MAX_NUMBER_SCHEDULE;
+                  return item;
+               })
+            }
+
+            // console.log("Schedule", schedule);
+
+            let existing = await db.Schedule.findAll(
+               {
+                  where: { doctorId: data.doctorId, date: data.date },
+                  attributes: ['timeType', 'date', 'doctorId', 'maxNumber'],
+                  raw: true
+               }
+            ); 
+
+            // convert date
+            if(existing && existing.length > 0) {
+               existing = existing.map(item => {
+                  item.date = new Date(item.date).getTime();
+                  return item;
+               })
+            }
+
+            // compare different
+            let toCreate = _.differenceWith(schedule, existing, (a, b) => {
+               return a.timeType === b.timeType && a.date === b.date;
+            });
+            // console.log('To create', toCreate);
+
+            // create data
+            if(toCreate && toCreate.length > 0) {
+               await db.Schedule.bulkCreate(toCreate);
+            }
+
+            resolve({
+               errorCode: 0,
+               errorMessage: 'Create schedule succeed!'
             })
          }
       } catch (error) {
@@ -119,5 +206,6 @@ module.exports = {
    getAllDoctorsService: getAllDoctorsService,
    saveDetailInfoDoctor: saveDetailInfoDoctor,
    getDetailDoctorById: getDetailDoctorById,
+   bulkCreateSchedule: bulkCreateSchedule,
 
 }
