@@ -5,8 +5,7 @@ Library: react-select,
 
 1. multer npm : Dung de load file
 2. npm install --save bcrypt@5.0.1 : dung de ma hoa mat khau
-
-3. eager loading : tao relationship giua ca modal
+3. eager loading : tao relationship giua cac modal
 4. npm install --save react-markdown-editor-lite@1.3.0 --legacy-peer-deps
 5. npm install --save markdown-it@12.1.0 --legacy-peer-deps
 6. npm install --save react-select@4.3.1
