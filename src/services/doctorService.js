@@ -1,5 +1,6 @@
+import { where } from 'sequelize';
 import db from '../models/index';
-import _ from 'lodash';
+import _, { includes, reject } from 'lodash';
 require('dotenv').config();
 
 const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
@@ -118,9 +119,9 @@ let saveDetailInfoDoctor = (data) => {
                // update
                await db.Doctor_Infor.update({
                   doctorId: data.doctorId,
-                  priceId: data.selectedPrice,
-                  provinceId: data.selectedProvince,
-                  paymentId: data.selectedPayment,
+                  priceId: data.selectedPrice.value,
+                  provinceId: data.selectedProvince.value,
+                  paymentId: data.selectedPayment.value,
                   nameClinic: data.nameClinic,
                   addressClinic: data.addressClinic,
                   note: data.note
@@ -133,9 +134,9 @@ let saveDetailInfoDoctor = (data) => {
                // create
                await db.Doctor_Infor.create({
                   doctorId: data.doctorId,
-                  priceId: data.selectedPrice,
-                  provinceId: data.selectedProvince,
-                  paymentId: data.selectedPayment,
+                  priceId: data.selectedPrice.value,
+                  provinceId: data.selectedProvince.value,
+                  paymentId: data.selectedPayment.value,
                   nameClinic: data.nameClinic,
                   addressClinic: data.addressClinic,
                   note: data.note
@@ -177,6 +178,17 @@ let getDetailDoctorById = (id) => {
                      model: db.Allcode,
                      as: 'positionData',
                      attributes: ['valueVi', 'valueEn']
+                  },
+                  {
+                     model: db.Doctor_Infor,
+                     attributes: {
+                        exclude: ['id', 'doctorId'] //exclude: ngoai tru 
+                     },
+                     include: [
+                        {model: db.Allcode, as: 'priceTypeData', attributes: ['valueEn', 'valueVi']},
+                        {model: db.Allcode, as: 'provinceTypeData', attributes: ['valueEn', 'valueVi']},
+                        {model: db.Allcode, as: 'paymentTypeData', attributes: ['valueEn', 'valueVi']},
+                     ]
                   }
                ],
                raw: false,
@@ -267,11 +279,9 @@ let getScheduleByDate = (doctorId, date) => {
                   doctorId: doctorId,
                   date: date
                },
-               include: [{
-                  model: db.Allcode,
-                  as: 'timeTypeData',
-                  attributes: ['valueEn', 'valueVi']
-               }, ],
+               include: [
+                  { model: db.Allcode, as: 'timeTypeData', attributes: ['valueEn', 'valueVi']}, 
+               ],
                raw: false,
                next: true
             })
@@ -289,6 +299,100 @@ let getScheduleByDate = (doctorId, date) => {
    });
 }
 
+let getExtraInforDoctorById = (id) => {
+   return new Promise(async(resolve, reject) => {
+      try {
+         if(!id) {
+            resolve({
+               errorCode: 1,
+               errorMessage: 'Missing required parameter!'
+            })
+         } else {
+            let data = await db.Doctor_Infor.findOne({
+               where: { doctorId: id},
+               attributes: {
+                  exclude: ['id', 'doctorId'] //Khong lay 2 cot: id, doctorId
+               },
+               include: [
+                  {model: db.Allcode, as: 'priceTypeData', attributes: ['valueEn', 'valueVi']},
+                  {model: db.Allcode, as: 'provinceTypeData', attributes: ['valueEn', 'valueVi']},
+                  {model: db.Allcode, as: 'paymentTypeData', attributes: ['valueEn', 'valueVi']},
+               ],
+               raw: false,
+               next: true
+            })
+
+            if(!data) data = {}
+
+            resolve({
+               errorCode: 0,
+               data: data
+            })
+         }
+      } catch (error) {
+         reject(error);
+      }
+   })
+}
+
+let getProfileDoctorById = (id) => {
+   return new Promise(async (resolve, reject) => {
+      try {
+         if(!id) {
+            resolve({
+               errorCode: 1,
+               errorMessage: "Missing required parameter!"
+            })
+         } else {
+            let data = await db.User.findOne({
+               where: {
+                  id: id
+               },
+               attributes: {
+                  exclude: ['password']
+               },
+               include: [
+                  {
+                     model: db.Markdown,
+                     attributes: ['description', 'contentHTML', 'contentMarkdown']
+                  },
+                  {
+                     model: db.Allcode,
+                     as: 'positionData',
+                     attributes: ['valueVi', 'valueEn']
+                  },
+                  {
+                     model: db.Doctor_Infor,
+                     attributes: {
+                        exclude: ['id', 'doctorId'] //exclude: ngoai tru 
+                     },
+                     include: [
+                        {model: db.Allcode, as: 'priceTypeData', attributes: ['valueEn', 'valueVi']},
+                        {model: db.Allcode, as: 'provinceTypeData', attributes: ['valueEn', 'valueVi']},
+                        {model: db.Allcode, as: 'paymentTypeData', attributes: ['valueEn', 'valueVi']},
+                     ]
+                  }
+               ],
+               raw: false,
+               nest: true
+            });
+            
+            if(data && data.image) {
+               data.image = new Buffer(data.image, 'base64').toString('binary');
+            }
+            if(!data) data = {}
+
+            resolve({
+               errorCode: 0,
+               data: data
+            })
+         }
+      } catch (error) {
+         reject(error);
+      }
+   })
+}
+
 module.exports = {
    getTopDoctorHomeService: getTopDoctorHomeService,
    getAllDoctorsService: getAllDoctorsService,
@@ -296,5 +400,7 @@ module.exports = {
    getDetailDoctorById: getDetailDoctorById,
    bulkCreateSchedule: bulkCreateSchedule,
    getScheduleByDate: getScheduleByDate,
+   getExtraInforDoctorById: getExtraInforDoctorById,
+   getProfileDoctorById: getProfileDoctorById,
 
 }
