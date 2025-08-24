@@ -1,7 +1,7 @@
 npx sequelize-cli db:migrate
 npx sequelize-cli db:seed:all
 
-Library: react-select, 
+Library: react-select, nodemailer, 
 
 1. multer npm : Dung de load file
 2. npm install --save bcrypt@5.0.1 : dung de ma hoa mat khau
@@ -10,7 +10,9 @@ Library: react-select,
 5. npm install --save markdown-it@12.1.0 --legacy-peer-deps
 6. npm install --save react-select@4.3.1
 7. npm install --save lodash@4.17.21
-8. npm i --save react-number-format@4.6.4 --legacy-peer-deps
+8. npm install --save react-number-format@4.6.4 --legacy-peer-deps
+9. npm install --save-exact nodemailer@6.6.3
+
 
 xx. link image github?raw=true
 
