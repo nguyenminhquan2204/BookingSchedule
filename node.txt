@@ -12,9 +12,12 @@ Library: react-select, nodemailer,
 7. npm install --save lodash@4.17.21
 8. npm install --save react-number-format@4.6.4 --legacy-peer-deps
 9. npm install --save-exact nodemailer@6.6.3
-
+10. npm install --save-exact uuid@8.3.2
 
 xx. link image github?raw=true
+
+ORM.
+1 n - (hasMany - belongsTo)
 
 
 
